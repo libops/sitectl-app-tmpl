@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/libops/sitectl/pkg/plugin"
@@ -16,8 +17,8 @@ func TestCreateDefinition(t *testing.T) {
 	if spec.DockerComposeRepo != TemplateRepo {
 		t.Fatalf("DockerComposeRepo = %q, want %q", spec.DockerComposeRepo, TemplateRepo)
 	}
-	if len(spec.DockerComposeUp) == 0 {
-		t.Fatal("expected DockerComposeUp commands")
+	if len(spec.DockerComposeUp) != 1 || !strings.Contains(spec.DockerComposeUp[0], "--wait --wait-timeout 600") {
+		t.Fatalf("create must wait for service health before reporting ready: %+v", spec.DockerComposeUp)
 	}
 	if len(spec.DockerComposeBuild) != 2 || spec.DockerComposeBuild[0] != "docker compose pull --ignore-buildable" {
 		t.Fatalf("expected Docker Compose build commands, got %+v", spec.DockerComposeBuild)

@@ -50,7 +50,7 @@ func createDefinition() plugin.CreateSpec {
 			{Name: DatabaseVolume},
 		},
 		DockerComposeUp: []string{
-			"docker compose up --remove-orphans -d",
+			"docker compose up --remove-orphans --wait --wait-timeout 600 -d",
 		},
 		DockerComposeDown:    []string{"docker compose down"},
 		DockerComposeRollout: []string{"./scripts/rollout.sh"},
