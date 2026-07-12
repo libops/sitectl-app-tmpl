@@ -1,0 +1,13 @@
+---
+http:
+  services:
+    app:
+      loadBalancer:
+        servers:
+          - url: http://app:8080
+  routers:
+    app:
+      rule: PathPrefix(`/`)
+      entryPoints:
+        - web
+      service: app

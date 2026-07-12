@@ -1,0 +1,103 @@
+---
+x-common: &common
+  restart: unless-stopped
+  networks:
+    default:
+
+networks:
+  default:
+
+volumes:
+  mariadb-data: {}
+  solr-data: {}
+
+secrets:
+  DB_ROOT_PASSWORD:
+    file: ./secrets/DB_ROOT_PASSWORD
+  APP_DB_PASSWORD:
+    file: ./secrets/APP_DB_PASSWORD
+
+services:
+  init:
+    image: libops/base:3.2.2.0@sha256:2382876ad70c936e99f6b838fb16c709cb9d9f91e6aa3be5625355ee1f3fab90
+    restart: "no"
+    profiles: [tools]
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        install -d -m 0700 /secrets
+        if [ ! -s /secrets/DB_ROOT_PASSWORD ]; then
+          openssl rand -hex 32 >/secrets/DB_ROOT_PASSWORD
+        fi
+        if [ ! -s /secrets/APP_DB_PASSWORD ]; then
+          openssl rand -hex 32 >/secrets/APP_DB_PASSWORD
+        fi
+        chmod 0600 /secrets/DB_ROOT_PASSWORD /secrets/APP_DB_PASSWORD
+    volumes:
+      - ./secrets:/secrets:rw
+      - mariadb-data:/mariadb-data
+
+  app:
+    <<: *common
+    image: libops/app:local
+    build:
+      context: .
+    environment:
+      INGRESS_HOSTNAMES: localhost
+      INGRESS_SCHEME: http
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /installed && wget -q --spider http://127.0.0.1:8080/"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  mariadb:
+    <<: *common
+    image: libops/mariadb:11@sha256:edc726a734409b93a54535e9251132d778575c0f7e77ae4ef552c9fe936cc560
+    environment:
+      DB_NAME: app
+      DB_USER: app
+    secrets:
+      - source: DB_ROOT_PASSWORD
+      - source: APP_DB_PASSWORD
+        target: DB_PASSWORD
+    volumes:
+      - mariadb-data:/var/lib/mysql:rw
+
+  solr:
+    <<: *common
+    image: solr:9.10.1@sha256:f4d36b957707a7a8d3876cb45a9f0b4c2bba3aea460e5798f9eeca7d979a66fa
+    command: ["solr-precreate", "default"]
+    environment:
+      SOLR_HEAP: 256m
+    volumes:
+      - solr-data:/var/solr:rw
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS 'http://127.0.0.1:8983/solr/admin/cores?action=STATUS&core=default&wt=json' >/dev/null"]
+      interval: 2s
+      timeout: 2s
+      retries: 60
+
+  traefik:
+    <<: *common
+    image: traefik:v3.7.5@sha256:e4d98158c01ad752fc1071d4e9573788747230d902cdde00a772516e692d07c9
+    command:
+      - --ping=true
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+      - --entrypoints.web.address=:80
+    ports:
+      - "127.0.0.1::80"
+    volumes:
+      - ./conf/traefik:/etc/traefik/dynamic:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: traefik healthcheck --ping
+      interval: 2s
+      timeout: 2s
+      retries: 30

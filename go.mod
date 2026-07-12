@@ -3,7 +3,7 @@ module github.com/libops/sitectl-app-tmpl
 go 1.26.1
 
 require (
-	github.com/libops/sitectl v0.37.0
+	github.com/libops/sitectl v0.39.0
 	github.com/spf13/cobra v1.10.2
 )
 
