@@ -24,6 +24,7 @@ check-core-version:
 	./scripts/check-sitectl-core-version.sh v0.39.0
 
 test: check-core-version build
+	./scripts/test-scaffold-customization.sh
 	$(GO) test ./...
 
 work:
