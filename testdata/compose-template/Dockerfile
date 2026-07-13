@@ -10,4 +10,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=2s --timeout=2s --retries=30 \
   CMD wget -q --spider http://127.0.0.1:8080/ || exit 1
 
-CMD ["busybox", "httpd", "-f", "-p", "8080", "-h", "/srv/app"]
+CMD ["/bin/busybox", "httpd", "-f", "-p", "8080", "-h", "/srv/app"]

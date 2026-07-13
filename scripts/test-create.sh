@@ -100,7 +100,8 @@ compose_up() {
 	if ! HOME="${SITECTL_HOME}" sitectl compose up; then
 		(
 			cd "${SITE_DIR}" &&
-				docker compose ps -a || true
+				docker compose ps -a &&
+				docker compose logs --no-color || true
 		)
 		exit 1
 	fi
