@@ -39,5 +39,7 @@ require_line "$release_workflow" 'needs: seed-initial-version' \
   "release creation can race the initial-version baseline"
 require_line "$goreleaser_workflow" "if: github.ref_name != 'v0.0.0'" \
   "the seed tag would publish a placeholder plugin release"
+require_line "$repo_root/.goreleaser.yaml" 'token: "{{ .Env.HOMEBREW_REPO_TOKEN }}"' \
+  "Homebrew publication is not isolated from source-release credentials"
 
 echo "Release bootstrap contracts passed."
