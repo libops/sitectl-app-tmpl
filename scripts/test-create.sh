@@ -26,6 +26,7 @@ TMP_DIR="$(mktemp -d "${TMP_PARENT%/}/${PLUGIN_BINARY}-test.XXXXXX")"
 SITECTL_HOME="${TMP_DIR}/home"
 BIN_DIR="${TMP_DIR}/bin"
 SITE_DIR="${TMP_DIR}/${SITE_DIR_NAME}"
+FIXTURE_REPO="${TMP_DIR}/compose-template"
 PATH="${BIN_DIR}:${PATH}"
 export PATH
 mkdir -p "${SITECTL_HOME}"
@@ -63,6 +64,20 @@ build_plugin() {
 	command -v "${PLUGIN_BINARY}" >/dev/null
 }
 
+prepare_fixture() {
+	mkdir -p "${FIXTURE_REPO}"
+	cp -a "${REPO_ROOT}/testdata/compose-template/." "${FIXTURE_REPO}/"
+	git -C "${FIXTURE_REPO}" init -q -b main
+	git -C "${FIXTURE_REPO}" config user.email "actions@github.com"
+	git -C "${FIXTURE_REPO}" config user.name "GitHub Actions"
+	git -C "${FIXTURE_REPO}" add .
+	git -C "${FIXTURE_REPO}" commit -q -m "Create integration fixture"
+	(
+		cd "${FIXTURE_REPO}" &&
+			docker compose config --quiet
+	)
+}
+
 create_site() {
 	local target="${PLUGIN_NAME}/${CREATE_DEFINITION}"
 	local extra_args=()
@@ -73,7 +88,9 @@ create_site() {
 	HOME="${SITECTL_HOME}" sitectl create "${target}" \
 		--path "${SITE_DIR}" \
 		--type local \
+		--context "${SITECTL_CONTEXT}" \
 		--checkout-source template \
+		--template-repo "${FIXTURE_REPO}" \
 		--default-context \
 		--setup-only \
 		"${extra_args[@]}"
@@ -83,7 +100,8 @@ compose_up() {
 	if ! HOME="${SITECTL_HOME}" sitectl compose up; then
 		(
 			cd "${SITE_DIR}" &&
-				docker compose ps -a || true
+				docker compose ps -a &&
+				docker compose logs --no-color || true
 		)
 		exit 1
 	fi
@@ -93,11 +111,17 @@ run_healthcheck() {
 	HOME="${SITECTL_HOME}" sitectl healthcheck
 }
 
+run_verify() {
+	HOME="${SITECTL_HOME}" sitectl verify
+}
+
 main() {
 	build_plugin
+	prepare_fixture
 	create_site
 	compose_up
 	run_healthcheck
+	run_verify
 }
 
 main "$@"

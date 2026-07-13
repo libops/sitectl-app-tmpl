@@ -1,7 +1,8 @@
-.PHONY: build deps lint test work install integration-test
+.PHONY: build check-core-version deps lint test work install integration-test
 
 BINARY_NAME=sitectl-app-tmpl
 GO ?= go
+GOFMT ?= gofmt
 CREATE_DEFINITION?=default
 CREATE_ARGS?=
 SITECTL_CONTEXT?=integration-test
@@ -16,10 +17,14 @@ install: build
 	mv $(BINARY_NAME) /usr/local/bin
 
 lint:
-	$(GO) fmt ./...
+	test -z "$$(find . -name '*.go' -not -path './vendor/*' -exec $(GOFMT) -l {} +)"
 	golangci-lint run
 
-test: build
+check-core-version:
+	./scripts/check-sitectl-core-version.sh v0.39.0
+
+test: check-core-version build
+	./scripts/test-scaffold-customization.sh
 	$(GO) test ./...
 
 work:

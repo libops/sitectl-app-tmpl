@@ -1,6 +1,8 @@
 version: 2
 before:
   hooks:
+    - ./scripts/check-scaffold-customization.sh
+    - ./scripts/check-sitectl-core-version.sh v0.39.0
     - go mod tidy
 builds:
   - binary: sitectl-app-tmpl
@@ -65,3 +67,13 @@ nfpms:
       - sitectl-app-tmpl
     dependencies:
       - sitectl
+    overrides:
+      deb:
+        dependencies:
+          - sitectl (>= 0.39.0)
+      rpm:
+        dependencies:
+          - sitectl >= 0.39.0
+      apk:
+        dependencies:
+          - sitectl>=0.39.0
