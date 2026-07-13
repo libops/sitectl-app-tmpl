@@ -24,6 +24,14 @@ make test
 make install
 ```
 
+Releases are created only from merged pull requests. Use a semantic bump marker
+such as `[patch]`, `[minor]`, or `[major]` in the pull request title; use
+`[skip-release]` for changes that must not publish. On a new derived repository,
+the first release-bearing merge creates a `v0.0.0` baseline tag at the
+trusted pre-merge commit and publishes the requested first version. The release
+workflow checks out only trusted default-branch code, so this remains safe for
+pull requests from forks.
+
 Full plugin authoring checklist and architecture notes:
 
 https://sitectl.libops.io/contributing/app-template
