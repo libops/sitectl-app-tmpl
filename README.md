@@ -32,6 +32,11 @@ trusted pre-merge commit and publishes the requested first version. The release
 workflow checks out only trusted default-branch code, so this remains safe for
 pull requests from forks.
 
+GitHub release archives and native packages are enabled by default. Publishing
+those packages into a Debian or RPM repository is a separate, opt-in step:
+derived plugins should enable `publish-package-repo` only after wiring their own
+trusted package publisher and cloud identity into the reusable workflow.
+
 Full plugin authoring checklist and architecture notes:
 
 https://sitectl.libops.io/contributing/app-template

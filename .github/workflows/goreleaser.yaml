@@ -13,7 +13,7 @@ permissions:
 jobs:
   goreleaser:
     if: github.ref_name != 'v0.0.0'
-    uses: libops/.github/.github/workflows/sitectl-plugin-goreleaser.yaml@024b3a35736fd8857c990b5b33fd15c47ac787aa # main
+    uses: libops/.github/.github/workflows/sitectl-plugin-goreleaser.yaml@69fc4b92079cd51606e1d4757031c6e9b645bb5a # main
     permissions:
       contents: write
       id-token: write
@@ -21,3 +21,4 @@ jobs:
     with:
       go-version: "1.26.x"
       package-name: sitectl-app-tmpl
+      publish-package-repo: false
