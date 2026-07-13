@@ -25,6 +25,7 @@ check-core-version:
 
 test: check-core-version build
 	./scripts/test-scaffold-customization.sh
+	./scripts/test-release-bootstrap.sh
 	$(GO) test ./...
 
 work:
