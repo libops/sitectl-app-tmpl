@@ -18,12 +18,21 @@ require_line() {
 
 require_line "$release_workflow" 'group: release' \
   "release creation is not serialized"
-require_line "$release_workflow" 'ref: ${{ github.event.pull_request.merge_commit_sha }}' \
-  "initial-version seeding does not inspect the trusted merged revision"
+require_line "$release_workflow" 'queue: max' \
+  "pending releases can be silently replaced"
+if grep -Fq -- 'ref: ${{ github.event.pull_request.merge_commit_sha }}' "$release_workflow"; then
+  fail "privileged checkout cannot safely use a fork pull request merge revision"
+fi
 require_line "$release_workflow" "grep -Eq '^v[0-9]+\\.[0-9]+\\.[0-9]+$'" \
   "initial-version seeding does not recognize stable version tags"
-require_line "$release_workflow" 'baseline="$(git rev-parse HEAD^)"' \
-  "the initial baseline would hide the first merged release change"
+require_line "$release_workflow" 'BASE_SHA: ${{ github.event.pull_request.base.sha }}' \
+  "the initial baseline does not use the trusted pre-merge base revision"
+require_line "$release_workflow" '[[ ! "$BASE_SHA" =~ ^[0-9a-f]{40}$ ]]' \
+  "the initial baseline does not validate the event commit identifier"
+require_line "$release_workflow" 'git merge-base --is-ancestor "$BASE_SHA" HEAD' \
+  "the initial baseline is not required to precede the merged revision"
+require_line "$release_workflow" 'git tag v0.0.0 "$BASE_SHA"' \
+  "the initial baseline can omit commits under a supported merge policy"
 require_line "$release_workflow" 'git push origin refs/tags/v0.0.0' \
   "the initial semantic-version baseline is not published"
 require_line "$release_workflow" 'needs: seed-initial-version' \

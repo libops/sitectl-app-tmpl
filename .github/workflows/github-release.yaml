@@ -8,6 +8,7 @@ on:
 
 concurrency:
   group: release
+  queue: max
   cancel-in-progress: false
 
 jobs:
@@ -17,11 +18,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout merged revision
+      - name: Checkout trusted default branch
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
 
       - name: Seed the initial semantic-version baseline
         run: |
@@ -30,9 +30,15 @@ jobs:
             exit 0
           fi
 
-          baseline="$(git rev-parse HEAD^)"
-          git tag v0.0.0 "$baseline"
+          if [[ ! "$BASE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "The pull request base is not a full commit SHA" >&2
+            exit 1
+          fi
+          git merge-base --is-ancestor "$BASE_SHA" HEAD
+          git tag v0.0.0 "$BASE_SHA"
           git push origin refs/tags/v0.0.0
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
   release:
     needs: seed-initial-version
