@@ -1,0 +1,6 @@
+apiVersion: sitectl.libops.io/v1alpha1
+kind: TemplateContract
+schema: 1
+spec:
+  componentDefaults:
+    revision: app-tmpl-v1
