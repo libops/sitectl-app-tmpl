@@ -1,8 +1,10 @@
 version: 2
+release:
+  disable: "{{ .Env.GORELEASER_DISABLE_SCM_RELEASE }}"
 before:
   hooks:
     - ./scripts/check-scaffold-customization.sh
-    - ./scripts/check-sitectl-core-version.sh v0.39.0
+    - ./scripts/check-sitectl-core-version.sh v1.0.0
     - go mod tidy
 builds:
   - binary: sitectl-app-tmpl
@@ -16,7 +18,7 @@ builds:
       - darwin
 
 archives:
-  - format: tar.gz
+  - formats: [tar.gz]
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
@@ -26,11 +28,11 @@ archives:
       {{- if .Arm }}v{{ .Arm }}{{ end }}
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
 checksum:
   name_template: "checksums.txt"
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 changelog:
   sort: asc
   filters:
@@ -40,14 +42,24 @@ changelog:
       - "^.github"
 brews:
   - name: sitectl-app-tmpl
+    description: "A sitectl plugin template for application Compose stacks"
     homepage: "https://github.com/libops/sitectl-app-tmpl"
+    url_template: "https://github.com/libops/sitectl-app-tmpl/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    license: MIT
     commit_author:
       name: sitectl-dev[bot]
       email: 2408410+sitectl-dev[bot]@users.noreply.github.com
     repository:
       owner: libops
       name: homebrew
+      branch: "{{ .ProjectName }}-{{ .Version }}"
       token: "{{ .Env.HOMEBREW_REPO_TOKEN }}"
+      pull_request:
+        enabled: true
+        base:
+          owner: libops
+          name: homebrew
+          branch: main
     dependencies:
       - name: "libops/homebrew/sitectl"
 nfpms:
@@ -64,17 +76,17 @@ nfpms:
       - deb
       - rpm
     mtime: "{{ .CommitDate }}"
-    builds:
+    ids:
       - sitectl-app-tmpl
     dependencies:
       - sitectl
     overrides:
       deb:
         dependencies:
-          - sitectl (>= 0.39.0)
+          - sitectl (>= 1.0.0)
       rpm:
         dependencies:
-          - sitectl >= 0.39.0
+          - sitectl >= 1.0.0
       apk:
         dependencies:
-          - sitectl>=0.39.0
+          - sitectl>=1.0.0
