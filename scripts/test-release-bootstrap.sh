@@ -39,6 +39,15 @@ require_line "$release_workflow" 'needs: seed-initial-version' \
   "release creation can race the initial-version baseline"
 require_line "$goreleaser_workflow" "if: github.ref_name != 'v0.0.0'" \
   "the seed tag would publish a placeholder plugin release"
+require_line "$goreleaser_workflow" \
+  'uses: libops/.github/.github/workflows/sitectl-plugin-goreleaser.yaml@e1e30b58c9c566f72b22f03e637cd5218d635727 # main' \
+  "the release workflow is not pinned to the reviewed full-recovery implementation"
+require_line "$goreleaser_workflow" \
+  "release-mode: \${{ github.ref_type == 'tag' && 'full' || inputs.release-mode }}" \
+  "tag-triggered releases can inherit a manual recovery-mode default"
+require_line "$goreleaser_workflow" \
+  'sitectl-ref: 65cfde137a58ba14aaa9a1512d88b943888872f3 # v1.0.0' \
+  "release builds are not pinned to the sitectl v1.0.0 SDK"
 require_line "$goreleaser_workflow" 'publish-package-repo: false' \
   "derived plugins would require private LibOps package infrastructure"
 require_line "$repo_root/.goreleaser.yaml" 'token: "{{ .Env.HOMEBREW_REPO_TOKEN }}"' \
