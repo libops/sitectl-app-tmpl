@@ -40,11 +40,19 @@ require_line "$release_workflow" 'needs: seed-initial-version' \
 require_line "$goreleaser_workflow" "if: github.ref_name != 'v0.0.0'" \
   "the seed tag would publish a placeholder plugin release"
 require_line "$goreleaser_workflow" \
-  'uses: libops/.github/.github/workflows/sitectl-plugin-goreleaser.yaml@e1e30b58c9c566f72b22f03e637cd5218d635727 # main' \
+  'uses: libops/.github/.github/workflows/sitectl-plugin-goreleaser.yaml@5f44a8c8d157bb7e5cf6d9e1c98847a604e87455 # main' \
   "the release workflow is not pinned to the reviewed full-recovery implementation"
+require_line "$goreleaser_workflow" 'default: full' \
+  "the only supported manual release mode is not the default"
+if grep -Fq -- 'homebrew-only' "$goreleaser_workflow" ||
+  grep -Fq -- 'packages-only' "$goreleaser_workflow"; then
+  fail "the release workflow exposes a mode unsupported without package publishing"
+fi
 require_line "$goreleaser_workflow" \
   "release-mode: \${{ github.ref_type == 'tag' && 'full' || inputs.release-mode }}" \
   "tag-triggered releases can inherit a manual recovery-mode default"
+require_line "$goreleaser_workflow" 'HOMEBREW_REPO: ${{ secrets.HOMEBREW_REPO }}' \
+  "Homebrew publication does not receive its dedicated repository token"
 require_line "$goreleaser_workflow" \
   'sitectl-ref: 65cfde137a58ba14aaa9a1512d88b943888872f3 # v1.0.0' \
   "release builds are not pinned to the sitectl v1.0.0 SDK"
