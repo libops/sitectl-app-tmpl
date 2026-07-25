@@ -54,8 +54,8 @@ require_line "$goreleaser_workflow" \
 require_line "$goreleaser_workflow" 'HOMEBREW_REPO: ${{ secrets.HOMEBREW_REPO }}' \
   "Homebrew publication does not receive its dedicated repository token"
 require_line "$goreleaser_workflow" \
-  'sitectl-ref: 65cfde137a58ba14aaa9a1512d88b943888872f3 # v1.0.0' \
-  "release builds are not pinned to the sitectl v1.0.0 SDK"
+  'sitectl-ref: 43d6c0c1450616567082af965424750c0ab6fdeb # v1.4.0' \
+  "release builds are not pinned to the sitectl v1.4.0 SDK"
 require_line "$goreleaser_workflow" 'publish-package-repo: false' \
   "derived plugins would require private LibOps package infrastructure"
 require_line "$repo_root/.goreleaser.yaml" 'token: "{{ .Env.HOMEBREW_REPO_TOKEN }}"' \
