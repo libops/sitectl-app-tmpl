@@ -32,8 +32,8 @@ func TestAppValidateRunnerReportsConfiguredContext(t *testing.T) {
 	runner.BindFlags(cmd)
 
 	results, err := runner.Run(cmd, &config.Context{
-		ProjectDir:  "/srv/app",
-		ProjectName: "app",
+		ProjectDir:         "/srv/app",
+		ComposeProjectName: "app",
 	})
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)

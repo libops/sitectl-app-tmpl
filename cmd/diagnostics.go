@@ -79,7 +79,7 @@ func (r *appValidateRunner) Run(cmd *cobra.Command, ctx *config.Context) ([]site
 	}
 
 	results = append(results, validateNonEmpty("project directory", ctx.ProjectDir, "Set project-dir on the sitectl context."))
-	results = append(results, validateNonEmpty("compose project", ctx.ProjectName, "Set project-name on the sitectl context."))
+	results = append(results, validateNonEmpty("compose project", ctx.EffectiveComposeProjectName(), "Set compose-project-name on the sitectl context."))
 
 	codebaseRootfs := strings.TrimSpace(r.codebaseRootfs)
 	if codebaseRootfs == "" {
