@@ -120,7 +120,7 @@ verify_template_lock() {
 	awk '
 		$1 == "sitectl:" { in_sitectl = 1; next }
 		in_sitectl && /^[^[:space:]]/ { in_sitectl = 0 }
-		in_sitectl && $1 == "version:" && $2 == "1.0.0" { found = 1 }
+		in_sitectl && $1 == "version:" && $2 == "1.8.0" { found = 1 }
 		END { exit !found }
 	' "${lock}"
 	awk '
