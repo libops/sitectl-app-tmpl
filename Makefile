@@ -1,4 +1,4 @@
-.PHONY: build check-core-version deps lint test work install integration-test
+.PHONY: build check-core-version deps deps-update lint mod-check test work install integration-test
 
 BINARY_NAME=sitectl-app-tmpl
 GO ?= go
@@ -7,10 +7,14 @@ CREATE_DEFINITION?=default
 CREATE_ARGS?=
 SITECTL_CONTEXT?=integration-test
 
-deps: work
+deps:
+	$(GO) mod download
+
+deps-update:
+	$(GO) get -u ./...
 	$(GO) mod tidy
 
-build:
+build: deps
 	$(GO) build -o $(BINARY_NAME) .
 
 install: build
@@ -23,7 +27,10 @@ lint:
 check-core-version:
 	./scripts/check-sitectl-core-version.sh v1.4.0
 
-test: check-core-version build
+mod-check:
+	$(GO) mod tidy -diff
+
+test: check-core-version deps
 	./scripts/test-scaffold-customization.sh
 	./scripts/test-release-bootstrap.sh
 	$(GO) test ./...

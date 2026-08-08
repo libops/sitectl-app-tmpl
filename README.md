@@ -26,6 +26,12 @@ make test
 make install
 ```
 
+The default build and test targets only download the module graph and never
+rewrite `go.mod` or `go.sum`. Use `make deps-update` when intentionally changing
+dependencies and `make mod-check` to reject tidy drift. `make work` is the
+explicit local-development step that points the plugin at a sibling sitectl
+checkout.
+
 Releases are created only from merged pull requests. Use a semantic bump marker
 such as `[patch]`, `[minor]`, or `[major]` in the pull request title; use
 `[skip-release]` for changes that must not publish. On a new derived repository,

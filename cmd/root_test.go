@@ -115,6 +115,9 @@ func assertRolloutContract(t *testing.T, commands []string) {
 		t.Fatalf("final full-stack health wait must be bounded and fail hard: %q", fullStart)
 	}
 	for _, command := range commands {
+		if strings.Contains(command, "|| true") {
+			t.Fatalf("rollout must not suppress an exhausted command failure: %q", command)
+		}
 		if command == "./scripts/rollout.sh" {
 			t.Fatalf("rollout must be plugin-owned metadata: %+v", commands)
 		}
