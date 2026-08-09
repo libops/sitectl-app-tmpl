@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-minimum="${1:-v1.8.0}"
+minimum="${1:-v1.9.0}"
 root_dir="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 go_mod="$root_dir/go.mod"
 version="$(awk -f "$root_dir/scripts/go-mod-sitectl-version.awk" "$go_mod")"

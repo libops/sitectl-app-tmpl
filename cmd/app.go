@@ -22,5 +22,5 @@ func appExecCommand(s *sitectlplugin.SDK) *cobra.Command {
 }
 
 func runAppExec(s *sitectlplugin.SDK, cmd *cobra.Command, args ...string) error {
-	return s.RunActiveComposeProjectCommand(cmd, sitectlplugin.DockerComposeExecCommand(AppService, args...))
+	return s.RunActiveComposeProjectArgv(cmd, sitectlplugin.DockerComposeExecArgv(AppService, args...))
 }

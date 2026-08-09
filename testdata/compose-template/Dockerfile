@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=libops/base:3.2.2.0@sha256:2382876ad70c936e99f6b838fb16c709cb9d9f91e6aa3be5625355ee1f3fab90
+ARG BASE_IMAGE=libops/base:3.2.2.0@sha256:aa0c61029734f3293bca068a95c72c0b07ac949292c446c83ada78e81a42c85d
 FROM ${BASE_IMAGE}
 
 COPY fixture-httpd.sh fixture-install.sh /tmp/
