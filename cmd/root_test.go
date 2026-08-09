@@ -17,13 +17,16 @@ func TestCreateDefinition(t *testing.T) {
 	if spec.DockerComposeRepo != TemplateRepo {
 		t.Fatalf("DockerComposeRepo = %q, want %q", spec.DockerComposeRepo, TemplateRepo)
 	}
+	if spec.DockerComposeBranch != "replace-with-immutable-template-tag" {
+		t.Fatalf("DockerComposeBranch = %q, want the immutable-release scaffold marker", spec.DockerComposeBranch)
+	}
 	if len(spec.DockerComposeUp) != 1 || !strings.Contains(spec.DockerComposeUp[0], "--wait --wait-timeout 600") {
 		t.Fatalf("create must wait for service health before reporting ready: %+v", spec.DockerComposeUp)
 	}
 	if len(spec.DockerComposeBuild) != 2 || spec.DockerComposeBuild[0] != "docker compose pull --ignore-buildable" {
 		t.Fatalf("expected Docker Compose build commands, got %+v", spec.DockerComposeBuild)
 	}
-	if len(spec.DockerComposeInit) != 2 || spec.DockerComposeInit[1] != "docker compose run --rm init" {
+	if len(spec.DockerComposeInit) != 2 || spec.DockerComposeInit[0] != InitializeEnvironment || spec.DockerComposeInit[1] != "docker compose run --rm init" {
 		t.Fatalf("expected Docker Compose init commands, got %+v", spec.DockerComposeInit)
 	}
 	if len(spec.Images) != 1 || spec.Images[0].Service != AppService || spec.Images[0].Image != AppImage {
@@ -104,11 +107,11 @@ func assertRolloutContract(t *testing.T, commands []string) {
 	if appStart != "docker compose up --remove-orphans --pull missing --quiet-pull -d "+AppService || strings.Contains(appStart, "--wait") {
 		t.Fatalf("initial start must target only the application service: %q", appStart)
 	}
-	if !strings.Contains(commands[4], "until test -f /installed") || !strings.Contains(commands[4], "-ge 150") {
-		t.Fatalf("migration readiness must be bounded: %q", commands[4])
+	if commands[4] != "docker compose exec -T "+AppService+" "+WaitInstalledProgram {
+		t.Fatalf("migration readiness must invoke the template program by stable path: %q", commands[4])
 	}
-	if !strings.Contains(commands[5], "ACTION REQUIRED") || !strings.Contains(commands[5], "migration") || !strings.Contains(commands[5], "exit 1") {
-		t.Fatalf("the scaffold migration placeholder must fail closed: %q", commands[5])
+	if commands[5] != "docker compose exec -T "+AppService+" "+MigrationProgram {
+		t.Fatalf("migration must invoke the template program by stable path: %q", commands[5])
 	}
 	fullStart := commands[6]
 	if !strings.Contains(fullStart, "--wait --wait-timeout 600") || !strings.HasSuffix(fullStart, " -d") || strings.Contains(fullStart, "||") {
@@ -120,6 +123,11 @@ func assertRolloutContract(t *testing.T, commands []string) {
 		}
 		if command == "./scripts/rollout.sh" {
 			t.Fatalf("rollout must be plugin-owned metadata: %+v", commands)
+		}
+		for _, forbidden := range []string{"sh -c", "bash -c", "php -r", "php:eval", "until test -f /installed", "ACTION REQUIRED"} {
+			if strings.Contains(command, forbidden) {
+				t.Fatalf("rollout embeds %q instead of invoking a checked-in program: %q", forbidden, command)
+			}
 		}
 	}
 }

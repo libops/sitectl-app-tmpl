@@ -4,25 +4,14 @@ set -eu
 minimum="${1:-v1.8.0}"
 root_dir="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 go_mod="$root_dir/go.mod"
-version="$(awk '
-  $1 == "require" && $2 == "(" { in_require = 1; next }
-  in_require && $1 == ")" { in_require = 0; next }
-  $1 == "require" && $2 == "github.com/libops/sitectl" { print $3; exit }
-  in_require && $1 == "github.com/libops/sitectl" { print $2; exit }
-' "$go_mod")"
+version="$(awk -f "$root_dir/scripts/go-mod-sitectl-version.awk" "$go_mod")"
 
 if [ -z "$version" ]; then
   echo "github.com/libops/sitectl must be a direct go.mod requirement" >&2
   exit 1
 fi
 
-if awk '
-  $1 == "replace" && $2 == "(" { in_replace = 1; next }
-  in_replace && $1 == ")" { in_replace = 0; next }
-  $1 == "replace" && $2 == "github.com/libops/sitectl" { found = 1 }
-  in_replace && $1 == "github.com/libops/sitectl" { found = 1 }
-  END { exit !found }
-' "$go_mod"; then
+if awk -f "$root_dir/scripts/go-mod-sitectl-replace.awk" "$go_mod"; then
   echo "github.com/libops/sitectl must not use a go.mod replace directive in a release" >&2
   exit 1
 fi
