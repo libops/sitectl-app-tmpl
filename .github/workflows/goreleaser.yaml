@@ -64,6 +64,6 @@ jobs:
       go-version: "1.26.5"
       release-mode: ${{ github.ref_type == 'tag' && 'full' || inputs.release-mode }}
       release-version: ${{ inputs.release-version }}
-      sitectl-ref: 8b532783c27aa58e9574ec38d945dd9481d3ac75 # v1.8.0
+      sitectl-ref: e0c99fb76bba65049865b4270bc0bcbabab9c3ed # v1.9.0
       package-name: sitectl-app-tmpl
       publish-package-repo: false

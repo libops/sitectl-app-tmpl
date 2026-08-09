@@ -118,7 +118,7 @@ verify_template_lock() {
 		-v expected_repository="${FIXTURE_REPO}" \
 		-v expected_commit="${fixture_commit}" \
 		-v expected_digest="${contract_digest}" \
-		-v expected_sitectl_version="1.8.2" \
+		-v expected_sitectl_version="1.9.0" \
 		-f "${REPO_ROOT}/scripts/assert-template-lock.awk" \
 		"${lock}"
 }

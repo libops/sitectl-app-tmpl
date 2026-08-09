@@ -25,7 +25,7 @@ lint:
 	golangci-lint run
 
 check-core-version:
-	./scripts/check-sitectl-core-version.sh v1.8.0
+	./scripts/check-sitectl-core-version.sh v1.9.0
 
 mod-check:
 	$(GO) mod tidy -diff
