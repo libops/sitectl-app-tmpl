@@ -52,11 +52,14 @@ require_pattern_replacement cmd/root.go \
   '^[[:space:]]*TemplateRepo[[:space:]]*=[[:space:]]*"https://github[.]com/libops/app-tmpl"' \
   "Compose template repository"
 require_pattern_replacement cmd/root.go \
+  '^[[:space:]]*TemplateBranch[[:space:]]*=[[:space:]]*"replace-with-immutable-template-tag"' \
+  "immutable Compose template version"
+require_pattern_replacement cmd/root.go \
   '^[[:space:]]*AppImage[[:space:]]*=[[:space:]]*"libops/app:local"' \
   "application image"
 require_replacement cmd/root.go \
-  "replace this fail-closed template command" \
-  "migration command"
+  "replace this fail-closed template migration program" \
+  "migration program"
 require_replacement cmd/verify.go \
   "No application-specific behavioral verification is configured." \
   "verification runner"

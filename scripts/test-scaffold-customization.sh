@@ -1,41 +1,14 @@
 #!/bin/sh
+
 set -eu
 
 root_dir="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 guard="$root_dir/scripts/check-scaffold-customization.sh"
+fixture="$root_dir/testdata/scaffold-customized"
 tmp="$(mktemp -d "${TMPDIR:-/tmp}/sitectl-app-tmpl-guard.XXXXXX")"
 trap 'rm -rf "$tmp"' EXIT HUP INT TERM
 
-mkdir -p "$tmp/cmd" "$tmp/.github/workflows" "$tmp/scripts"
-cat >"$tmp/go.mod" <<'EOF'
-module example.com/derived/sitectl-catalog
-EOF
-cat >"$tmp/cmd/root.go" <<'EOF'
-const (
-  PluginName = "catalog"
-  TemplateRepo = "https://github.com/example/catalog"
-  AppImage = "ghcr.io/example/catalog:1.0.0"
-)
-var migration = "catalog migrate"
-EOF
-cat >"$tmp/cmd/verify.go" <<'EOF'
-package cmd
-var verify = "catalog smoke"
-EOF
-cat >"$tmp/Makefile" <<'EOF'
-BINARY_NAME=sitectl-catalog
-EOF
-cat >"$tmp/.goreleaser.yaml" <<'EOF'
-builds:
-  - binary: sitectl-catalog
-EOF
-cat >"$tmp/.github/workflows/goreleaser.yaml" <<'EOF'
-with:
-  package-name: sitectl-catalog
-EOF
-cat >"$tmp/scripts/test-create.sh" <<'EOF'
-PLUGIN_BINARY="sitectl-catalog"
-EOF
+cp -R "$fixture/." "$tmp/"
 
 run_guard() {
   GITHUB_REPOSITORY=example/sitectl-catalog SCAFFOLD_ROOT_DIR="$tmp" "$guard"
@@ -50,7 +23,7 @@ expect_blocked() {
   backup="$tmp/.guard-backup"
 
   cp "$tmp/$file" "$backup"
-  printf '%s\n' "$marker" >>"$tmp/$file"
+  printf '%s\n' "$marker" >> "$tmp/$file"
   if run_guard >/dev/null 2>&1; then
     echo "customization guard accepted scaffold marker in $file: $marker" >&2
     exit 1
@@ -61,8 +34,9 @@ expect_blocked() {
 expect_blocked go.mod 'module github.com/libops/sitectl-app-tmpl'
 expect_blocked cmd/root.go 'PluginName = "app-tmpl"'
 expect_blocked cmd/root.go 'TemplateRepo = "https://github.com/libops/app-tmpl"'
+expect_blocked cmd/root.go 'TemplateBranch = "replace-with-immutable-template-tag"'
 expect_blocked cmd/root.go 'AppImage = "libops/app:local"'
-expect_blocked cmd/root.go 'replace this fail-closed template command'
+expect_blocked cmd/root.go 'replace this fail-closed template migration program'
 expect_blocked cmd/verify.go 'No application-specific behavioral verification is configured.'
 expect_blocked Makefile 'BINARY_NAME=sitectl-app-tmpl'
 expect_blocked .goreleaser.yaml 'binary: sitectl-app-tmpl'
@@ -71,8 +45,8 @@ expect_blocked scripts/test-create.sh 'PLUGIN_BINARY="sitectl-app-tmpl"'
 
 mv "$tmp/Makefile" "$tmp/Makefile.removed"
 if run_guard >/dev/null 2>&1; then
-  echo "customization guard accepted a derived release with a required file missing" >&2
+  echo 'customization guard accepted a derived release with a required file missing' >&2
   exit 1
 fi
 
-echo "Scaffold customization guard tests passed."
+echo 'Scaffold customization guard tests passed.'

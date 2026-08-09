@@ -16,12 +16,7 @@ if [[ -z "${GO_LINE}" ]]; then
 	echo "Unable to read Go directive from go.mod"
 	exit 1
 fi
-SITECTL_VERSION="$(awk '
-	$1 == "require" && $2 == "(" { in_require = 1; next }
-	in_require && $1 == ")" { in_require = 0; next }
-	$1 == "require" && $2 == "github.com/libops/sitectl" { print $3; exit }
-	in_require && $1 == "github.com/libops/sitectl" { print $2; exit }
-' go.mod)"
+SITECTL_VERSION="$(awk -f scripts/go-mod-sitectl-version.awk go.mod)"
 if [[ -z "${SITECTL_VERSION}" ]]; then
 	echo "Unable to read the sitectl version from go.mod"
 	exit 1

@@ -9,7 +9,7 @@ const (
 	PluginName             = "app-tmpl"
 	DisplayName            = "App Template"
 	TemplateRepo           = "https://github.com/libops/app-tmpl"
-	TemplateBranch         = "main"
+	TemplateBranch         = "replace-with-immutable-template-tag"
 	DefaultPath            = "./app"
 	AppService             = "app"
 	AppImage               = "libops/app:local"
@@ -22,7 +22,12 @@ const (
 	SearchService          = "solr"
 	FrontendService        = "traefik"
 	DefaultCodebaseRootfs  = "app"
+	InitializeEnvironment  = "./scripts/initialize-environment.sh"
+	WaitInstalledProgram   = "/usr/local/lib/sitectl/app-wait-installed.sh"
+	MigrationProgram       = "/usr/local/lib/sitectl/app-migrate.sh"
 )
+
+// Scaffold release blocker: replace this fail-closed template migration program.
 
 func composeProjectDiscovery() plugin.ComposeProjectDiscovery {
 	return plugin.ComposeProjectDiscovery{
@@ -49,7 +54,7 @@ func createDefinition() plugin.CreateSpec {
 			{Service: AppService, Image: AppImage, BuildPolicy: plugin.BuildPolicyIfNotPresent},
 		},
 		DockerComposeInit: []string{
-			"if [ ! -f .env ]; then cp sample.env .env; fi",
+			InitializeEnvironment,
 			"docker compose run --rm init",
 		},
 		InitArtifacts: []plugin.InitArtifact{
@@ -69,8 +74,8 @@ func createDefinition() plugin.CreateSpec {
 			"docker compose build --pull",
 			"docker compose run --rm init",
 			"docker compose up --remove-orphans --pull missing --quiet-pull -d " + AppService,
-			"docker compose exec -T " + AppService + " sh -c 'attempt=0; until test -f /installed; do attempt=$((attempt + 1)); if [ \"$attempt\" -ge 150 ]; then echo \"Application did not become ready for database migration within 5 minutes\" >&2; exit 1; fi; sleep 2; done'",
-			"printf '%s\\n' 'ACTION REQUIRED: replace this fail-closed template command with the application-supported database migration or an explicit manual migration gate before release.' >&2; exit 1",
+			"docker compose exec -T " + AppService + " " + WaitInstalledProgram,
+			"docker compose exec -T " + AppService + " " + MigrationProgram,
 			"docker compose up --remove-orphans --wait --wait-timeout 600 --pull missing --quiet-pull -d",
 		},
 	}

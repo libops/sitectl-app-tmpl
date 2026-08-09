@@ -92,6 +92,7 @@ create_site() {
 		--context "${SITECTL_CONTEXT}" \
 		--checkout-source template \
 		--template-repo "${FIXTURE_REPO}" \
+		--template-branch main \
 		--default-context \
 		--setup-only \
 		"${extra_args[@]}"
@@ -103,7 +104,8 @@ verify_template_lock() {
 	local contract_digest
 	local fixture_commit
 	local lock_mode
-	contract_digest="sha256:$(sha256sum "${contract}" | awk '{print $1}')"
+	read -r contract_hash _ < <(sha256sum "${contract}")
+	contract_digest="sha256:${contract_hash}"
 	fixture_commit="$(git -C "${FIXTURE_REPO}" rev-parse HEAD)"
 
 	test -f "${lock}" && test ! -L "${lock}"
@@ -112,21 +114,13 @@ verify_template_lock() {
 	grep -Fxq "apiVersion: sitectl.libops.io/v1alpha1" "${lock}"
 	grep -Fxq "kind: TemplateLock" "${lock}"
 	grep -Fxq "schema: 1" "${lock}"
-	awk -v expected="${FIXTURE_REPO}" '$1 == "repository:" && $2 == expected { count++ } END { exit count != 1 }' "${lock}"
-	awk -v expected="${fixture_commit}" '$1 == "commit:" && $2 == expected { count++ } END { exit count != 1 }' "${lock}"
-	awk '$1 == "path:" && $2 == ".libops/template-contract.yaml" { count++ } END { exit count != 1 }' "${lock}"
-	awk -v expected="${contract_digest}" '$1 == "digest:" && $2 == expected { count++ } END { exit count != 1 }' "${lock}"
-	awk '$1 == "revision:" && $2 == "app-tmpl-v1" { count++ } END { exit count != 1 }' "${lock}"
-	awk '
-		$1 == "sitectl:" { in_sitectl = 1; next }
-		in_sitectl && /^[^[:space:]]/ { in_sitectl = 0 }
-		in_sitectl && $1 == "version:" && $2 == "1.8.0" { found = 1 }
-		END { exit !found }
-	' "${lock}"
-	awk '
-		$1 == "-" && $2 == "package:" && $3 == "sitectl-app-tmpl" { found = 1 }
-		END { exit !found }
-	' "${lock}"
+	awk \
+		-v expected_repository="${FIXTURE_REPO}" \
+		-v expected_commit="${fixture_commit}" \
+		-v expected_digest="${contract_digest}" \
+		-v expected_sitectl_version="1.8.2" \
+		-f "${REPO_ROOT}/scripts/assert-template-lock.awk" \
+		"${lock}"
 }
 
 compose_up() {
