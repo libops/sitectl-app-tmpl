@@ -104,11 +104,14 @@ verify_template_lock() {
 	local contract_digest
 	local fixture_commit
 	local lock_mode
+	local sitectl_version
 	read -r contract_hash _ < <(sha256sum "${contract}")
 	contract_digest="sha256:${contract_hash}"
 	fixture_commit="$(git -C "${FIXTURE_REPO}" rev-parse HEAD)"
+	sitectl_version="$(sitectl --version | sed -n 's/^sitectl version \([^ ]*\).*/\1/p')"
 
 	test -f "${lock}" && test ! -L "${lock}"
+	test -n "${sitectl_version}"
 	lock_mode="$(stat -c '%a' "${lock}")"
 	test "${lock_mode}" = "644"
 	grep -Fxq "apiVersion: sitectl.libops.io/v1alpha1" "${lock}"
@@ -118,7 +121,7 @@ verify_template_lock() {
 		-v expected_repository="${FIXTURE_REPO}" \
 		-v expected_commit="${fixture_commit}" \
 		-v expected_digest="${contract_digest}" \
-		-v expected_sitectl_version="1.9.0" \
+		-v expected_sitectl_version="${sitectl_version}" \
 		-f "${REPO_ROOT}/scripts/assert-template-lock.awk" \
 		"${lock}"
 }
