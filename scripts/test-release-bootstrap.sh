@@ -40,7 +40,7 @@ require_line "$release_workflow" 'needs: seed-initial-version' \
 require_line "$goreleaser_workflow" "if: github.ref_name != 'v0.0.0'" \
   "the seed tag would publish a placeholder plugin release"
 require_line "$goreleaser_workflow" \
-  'uses: libops/.github/.github/workflows/sitectl-plugin-goreleaser.yaml@ec2d455628cf2d2a3497a7661ee7815b0fb1ee2d # main' \
+  'uses: libops/.github/.github/workflows/sitectl-plugin-goreleaser.yaml@7277eacc89fca014481b2ca66039f4176509bcfc # main' \
   "the release workflow is not pinned to the reviewed full-recovery implementation"
 require_line "$goreleaser_workflow" 'default: full' \
   "the only supported manual release mode is not the default"
